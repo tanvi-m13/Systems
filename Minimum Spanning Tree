@@ -1,0 +1,81 @@
+package apps;
+
+import structures.*;
+import java.util.ArrayList;
+
+public class MST {
+	
+	/**
+	 * Initializes the algorithm by building single-vertex partial trees
+	 * 
+	 * @param graph Graph for which the MST is to be found
+	 * @return The initial partial tree list
+	 */
+	public static PartialTreeList initialize(Graph graph) {
+		
+		PartialTreeList L = new PartialTreeList(); 
+		int length = graph.vertices.length;
+		
+		for (int i = 0; i < length; i++) { 
+			PartialTree trees = new PartialTree(graph.vertices[i]);
+			//System.out.println(Tree);
+			Vertex.Neighbor A = graph.vertices[i].neighbors;
+			
+			MinHeap<PartialTree.Arc> heap = trees.getArcs();
+			
+			while (A != null) {
+				Vertex nV = A.vertex;
+				int eW = A.weight;
+				PartialTree.Arc edge = new PartialTree.Arc(graph.vertices[i], nV, eW);
+				heap.insert(edge);
+				A = A.next;
+				
+			}
+			//System.out.println(A);
+			//System.out.println(Tree);
+			L.append(trees);
+		}
+		//System.out.println(L.size());
+		return L;
+	}
+	/**
+	 * Executes the algorithm on a graph, starting with the initial partial tree list
+	 * 
+	 * @param ptlist Initial partial tree list
+	 * @return Array list of all arcs that are in the MST - sequence of arcs is irrelevant
+	 */
+	public static ArrayList<PartialTree.Arc> execute(PartialTreeList ptlist) {
+		
+		if (ptlist.size() == 0) {//base case
+			return null;
+		}
+		
+		ArrayList<PartialTree.Arc> List = new ArrayList<PartialTree.Arc>();
+		
+		while (ptlist.size() > 1) {
+			
+			PartialTree X = ptlist.remove(); 
+			
+			MinHeap<PartialTree.Arc> PQ = X.getArcs(); 
+			PartialTree.Arc result = PQ.deleteMin();														
+			
+			Vertex V1 = result.v1;
+			Vertex V2 = result.v2;
+			
+			while (V2.getRoot().equals(X.getRoot().getRoot())) { 
+				result = X.getArcs().deleteMin(); 
+				V1 = result.v1;
+				V2 = result.v2;
+			}
+			
+			List.add(result); 
+			
+			PartialTree Y = ptlist.removeTreeContaining(V2);
+			X.merge(Y); 
+			ptlist.append(X);
+		
+		}
+		
+		return List;
+	}	
+}
